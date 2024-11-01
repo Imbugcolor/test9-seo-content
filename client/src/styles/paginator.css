@@ -1,0 +1,25 @@
+.my-pagination {
+    margin-top: 15px;
+    list-style: none;
+    display: flex;
+}
+
+.my-pagination .page-item  {
+    color: black;
+    width: 5px;
+    padding: 8px 16px;
+    text-decoration: none;
+    transition: background-color .3s;
+    border: 1px solid #ddd;
+    margin: 0 4px;
+}
+
+.my-pagination .active {
+    background-color: #000;
+    color: white;
+    border: 1px solid #000;
+}
+
+.my-pagination .page-item:hover:not(.active) {
+    background-color: #ddd;
+}

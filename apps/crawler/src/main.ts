@@ -11,6 +11,10 @@ import {
 
 async function bootstrap() {
   const app = await NestFactory.create(CrawlerModule);
+  app.enableCors({
+    origin: '*',
+    credentials: true,
+  });
   const configService = app.get(ConfigService);
   app.connectMicroservice({
     transport: Transport.TCP,

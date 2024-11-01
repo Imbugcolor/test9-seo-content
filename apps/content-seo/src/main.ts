@@ -11,6 +11,10 @@ import { ContentSeoModule } from './content-seo.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(ContentSeoModule);
+  app.enableCors({
+    origin: '*',
+    credentials: true,
+  });
   const configService = app.get(ConfigService);
   app.connectMicroservice({
     transport: Transport.TCP,
