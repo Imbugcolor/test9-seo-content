@@ -1,0 +1,37 @@
+services:
+  article:
+    build: 
+      context: .
+      dockerfile: ./apps/article/Dockerfile
+      target: development
+    command: npm run start:dev article
+    env_file:
+      - ./apps/article/.env
+    ports:
+      - '3001:3001'
+    volumes:
+      - .:/usr/src/app
+  content-seo:
+    build: 
+      context: .
+      dockerfile: ./apps/content-seo/Dockerfile
+      target: development
+    command: npm run start:dev content-seo
+    env_file:
+      - ./apps/content-seo/.env
+    ports:
+      - '3005:3005'
+    volumes:
+      - .:/usr/src/app
+  crawler:
+    build: 
+      context: .
+      dockerfile: ./apps/crawler/Dockerfile
+      target: development
+    command: npm run start:dev crawler
+    env_file:
+      - ./apps/crawler/.env
+    ports:
+      - '3003:3003'
+    volumes:
+      - .:/usr/src/app

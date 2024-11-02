@@ -11,7 +11,6 @@ import * as Joi from 'joi';
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
-        MONGODB_URI: Joi.string().required(),
         CRAWLER_HTTP_PORT: Joi.number().required(),
         CRAWLER_TCP_PORT: Joi.number().required(),
         ARTICLE_HOST: Joi.string().required(),

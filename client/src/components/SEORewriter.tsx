@@ -2,12 +2,17 @@ import { Button, Col, Input, Modal, Row } from 'antd'
 import React, { ChangeEvent, useState } from 'react'
 import ArticleList from './ArticleList'
 import { Article } from '../utils/interfaces/article.interface'
+import { postDataAPI } from '../utils/fetch/http.request'
+import { API_SERVICE } from '../utils/config'
+import { RewriteContentSeoDataResponse } from '../utils/responses/content-seo.response'
+import ReactQuill from 'react-quill';
 
 export default function SEORewriter() {
     const [originalContent, setOriginalContent] = useState('')
     const [seoContent, setSeoContent] = useState('')
     const [onBrowseContent, setOnBrowseContent] = useState(false)
     const [onSelectArticle, setOnSelectArticle] = useState<Article | null>(null)
+    const [onRewriting, setOnRewriting] = useState(false)
 
     const onChangeOriginalContent = (e: ChangeEvent<HTMLTextAreaElement>) => {
         setOriginalContent(e.target.value);
@@ -22,12 +27,27 @@ export default function SEORewriter() {
         setOriginalContent(onSelectArticle.originalContent);
         if (onSelectArticle.seoContent) {
             setSeoContent(onSelectArticle.seoContent)
+        } else {
+            setSeoContent('')
         }
         setOnBrowseContent(false);
     }
 
     const handleCancel = () => {
         setOnBrowseContent(false);
+    }
+
+    const onRewriteSEOSubmit = async() => {
+        if (!onSelectArticle) return;
+        try {
+            setOnRewriting(true)
+            const response = await postDataAPI<RewriteContentSeoDataResponse>(API_SERVICE.SEO, `content-seo/generate/${onSelectArticle._id}`, {})
+            setSeoContent(response.data.data);
+        } catch (error) {
+            console.log(error)
+        } finally {
+            setOnRewriting(false)
+        }
     }
 
     return (
@@ -45,11 +65,21 @@ export default function SEORewriter() {
                                 placeholder='Nhập nội dung'
                                 style={{ height: 350, resize: 'none' }}
                                 onChange={onChangeOriginalContent}
+                                disabled={onRewriting}
                             />
                         </div>
                         <div className='nav-features' style={{ margin: '16px 0' }}>
                             <Button style={{ marginRight: '16px' }} onClick={() => setOnBrowseContent(true)}>Chọn bài viết...</Button>
-                            <Button style={{ backgroundColor: '#385793', color: '#fff', opacity: originalContent ? 1 : 0.5 }} disabled={!originalContent}>Viết lại SEO</Button>
+                            <Button 
+                                style={{ 
+                                    backgroundColor: '#385793', 
+                                    color: '#fff', 
+                                    opacity: originalContent ? 1 : 0.5 
+                                }} 
+                                disabled={!originalContent}
+                                onClick={onRewriteSEOSubmit}
+                                loading={onRewriting}
+                                >Viết lại SEO</Button>
                         </div>
                     </div>
                 </Col>
@@ -64,6 +94,7 @@ export default function SEORewriter() {
                                 showCount
                                 style={{ height: 350, resize: 'none' }}
                                 onChange={onChangeSeoContent}
+                                disabled={onRewriting}
                             />
                         </div>
                     </div>

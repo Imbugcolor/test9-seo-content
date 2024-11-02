@@ -1,8 +1,7 @@
 import { Article } from "../interfaces/article.interface";
+import { DataResponse } from "../interfaces/response.interface";
 
-export interface ArticleDataResponse {
-    statusCode: number,
-    message: string,
+export interface ArticleDataResponse extends DataResponse {
     data: {
         data: {
             data: Article[],

@@ -10,6 +10,7 @@ import { Article, ArticleSchema, DatabaseModule } from '@app/common';
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
+        GEMINI_API_KEY: Joi.string().required(),
         OPENAI_API_KEY: Joi.string().required(),
         SEOCONTENT_HTTP_PORT: Joi.number().required(),
         SEOCONTENT_TCP_PORT: Joi.number().required(),

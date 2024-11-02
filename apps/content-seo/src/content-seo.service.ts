@@ -123,7 +123,7 @@ export class ContentSeoService {
       throw new NotFoundException();
     }
     const keywords = await this.analyzeKeywordsV2(id);
-    const prompt = `Rewrite the following content for SEO with a focus on these keywords: 
+    const prompt = `Completely rewrite an article the following content for SEO with a focus on these keywords: 
         ${keywords.join(', ')}. Improve readability, keyword usage, 
         and structure for SEO.\n\nContent:\n"${article.originalContent}"`;
 
