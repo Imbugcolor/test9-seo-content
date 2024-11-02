@@ -1,12 +1,5 @@
-import { Article } from '@app/common';
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import OpenAI from 'openai';
 import { GenerativeModel, GoogleGenerativeAI } from '@google/generative-ai';
 
@@ -16,10 +9,7 @@ export class ContentSeoService {
   private gemini: GoogleGenerativeAI;
   private geminiModel: GenerativeModel;
 
-  constructor(
-    private configService: ConfigService,
-    @InjectModel(Article.name) private articleModel: Model<Article>,
-  ) {
+  constructor(private configService: ConfigService) {
     this.openai = new OpenAI({
       apiKey: this.configService.get<string>('OPENAI_API_KEY'),
     });
@@ -31,48 +21,10 @@ export class ContentSeoService {
     });
   }
 
-  async analyzeKeywords(id: string): Promise<string[]> {
-    const article = await this.articleModel.findById(id).lean();
-    if (!article) {
-      throw new NotFoundException();
-    }
+  async analyzeKeywords(content: string): Promise<string[]> {
     const prompt = `
       Analyze the following content and extract important keywords that would be relevant for SEO:
-      Content: "${article.originalContent}"
-      Please return the keywords as a list.
-    `;
-
-    try {
-      const stream = await this.openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [{ role: 'user', content: prompt }],
-        stream: true,
-      });
-
-      let response: string;
-
-      for await (const chunk of stream) {
-        response += chunk.choices[0]?.delta?.content || '';
-      }
-
-      return response
-        .split('\n')
-        .map((keyword) => keyword.trim())
-        .filter((keyword) => keyword.length > 0);
-    } catch (error) {
-      console.error('Error analyzing keywords:', error);
-      throw new Error('Could not analyze keywords');
-    }
-  }
-
-  async analyzeKeywordsV2(id: string): Promise<string[]> {
-    const article = await this.articleModel.findById(id).lean();
-    if (!article) {
-      throw new NotFoundException();
-    }
-    const prompt = `
-      Analyze the following content and extract important keywords that would be relevant for SEO:
-      Content: "${article.originalContent}"
+      Content: "${content}"
       Please just return the keywords as a list under js array.
     `;
 
@@ -88,49 +40,29 @@ export class ContentSeoService {
     }
   }
 
-  async generateSEOContent(id: string): Promise<string> {
-    const article = await this.articleModel.findById(id).lean();
-    if (!article) {
-      throw new NotFoundException();
-    }
-    const keywords: string[] = [];
-    const prompt = `Rewrite the following content for SEO with a focus on these keywords: 
-        ${keywords.join(', ')}. Improve readability, keyword usage, 
-        and structure for SEO.\n\nContent:\n"${article.originalContent}"`;
-
+  async analyzeSEOContent(content: string, lang = 'vietnamese') {
+    const prompt1 = `
+      Analysis how to optimize SEO for the content and 
+      explain it by ${lang} and no need for font formatting,\n\nContent:\n"${content}"`;
     try {
-      const stream = await this.openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [{ role: 'user', content: prompt }],
-        stream: true,
-      });
+      const analysisResponse = await this.geminiModel.generateContent(prompt1);
 
-      let response: string;
-      for await (const chunk of stream) {
-        response += chunk.choices[0]?.delta?.content || '';
-      }
-
-      return response;
+      return analysisResponse.response.text();
     } catch (error) {
       console.error('Error generating content:', error);
-      throw new Error('Could not generate SEO content');
+      throw new InternalServerErrorException('Could not generate SEO content');
     }
   }
 
-  async generateSEOContentV2(id: string): Promise<string> {
-    const article = await this.articleModel.findById(id).lean();
-    if (!article) {
-      throw new NotFoundException();
-    }
-    const keywords = await this.analyzeKeywordsV2(id);
-    const prompt = `Completely rewrite an article the following content for SEO with a focus on these keywords: 
-        ${keywords.join(', ')}. Improve readability, keyword usage, 
-        and structure for SEO.\n\nContent:\n"${article.originalContent}"`;
-
+  async generateSEOContent(
+    content: string,
+    lang = 'vietnamese',
+  ): Promise<string> {
+    const prompt1 = `Completely rewrite an article the following content for SEO, rewrite it by ${lang} and no need for font formatting,\n\nContent:\n"${content}"`;
     try {
-      const result = await this.geminiModel.generateContent(prompt);
+      const analysisResponse = await this.geminiModel.generateContent(prompt1);
 
-      return result.response.text();
+      return analysisResponse.response.text();
     } catch (error) {
       console.error('Error generating content:', error);
       throw new InternalServerErrorException('Could not generate SEO content');

@@ -1,15 +1,32 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Query } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { EventPattern, Payload } from '@nestjs/microservices';
-import { CreateArticleDto, GetArticleQueryDto } from '@app/common';
+import {
+  CreateArticleDto,
+  GetArticleQueryDto,
+  UpdateArticleDto,
+} from '@app/common';
 
-@Controller()
+@Controller('article')
 export class ArticleController {
   constructor(private readonly articleService: ArticleService) {}
 
   @Get('/list')
   async getList(@Query() query: GetArticleQueryDto) {
     return this.articleService.getList(query);
+  }
+
+  @Get('/create')
+  async createArticle(@Body() createDto: CreateArticleDto) {
+    return this.articleService.create(createDto);
+  }
+
+  @Get('/update/:id')
+  async updateArticle(
+    @Param('id') id: string,
+    @Body() updateDto: UpdateArticleDto,
+  ) {
+    return this.articleService.update(id, updateDto);
   }
 
   @EventPattern('create-article')

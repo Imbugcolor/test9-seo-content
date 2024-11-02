@@ -5,3 +5,9 @@ export interface RewriteContentSeoDataResponse extends DataResponse {
         data: string
     }
 }
+
+export interface AnalyzeContentSeoDataResponse extends DataResponse {
+    data: {
+        data: string
+    }
+}

@@ -4,15 +4,19 @@ import ArticleList from './ArticleList'
 import { Article } from '../utils/interfaces/article.interface'
 import { postDataAPI } from '../utils/fetch/http.request'
 import { API_SERVICE } from '../utils/config'
-import { RewriteContentSeoDataResponse } from '../utils/responses/content-seo.response'
-import ReactQuill from 'react-quill';
+import { AnalyzeContentSeoDataResponse, RewriteContentSeoDataResponse } from '../utils/responses/content-seo.response'
+import ReactMarkdown from "react-markdown";
 
 export default function SEORewriter() {
     const [originalContent, setOriginalContent] = useState('')
     const [seoContent, setSeoContent] = useState('')
+    const [analysisData, setAnalysisData] = useState('')
     const [onBrowseContent, setOnBrowseContent] = useState(false)
+    const [onPreview, setOnPreview] = useState(false)
     const [onSelectArticle, setOnSelectArticle] = useState<Article | null>(null)
     const [onRewriting, setOnRewriting] = useState(false)
+    const [onAnalyzing, setOnAnalyzing] = useState(false)
+    const [isNewArticle, setIsNewArticle] = useState(true)
 
     const onChangeOriginalContent = (e: ChangeEvent<HTMLTextAreaElement>) => {
         setOriginalContent(e.target.value);
@@ -25,24 +29,47 @@ export default function SEORewriter() {
     const handleOk = () => {
         if (!onSelectArticle) return;
         setOriginalContent(onSelectArticle.originalContent);
+        setIsNewArticle(false);
         if (onSelectArticle.seoContent) {
             setSeoContent(onSelectArticle.seoContent)
         } else {
             setSeoContent('')
         }
         setOnBrowseContent(false);
+        setAnalysisData('')
     }
 
     const handleCancel = () => {
         setOnBrowseContent(false);
     }
 
+    const onAnalyzeSubmit = async() => {
+        if (!originalContent) return;
+        try {
+            setOnAnalyzing(true)
+            const response = 
+                await postDataAPI<AnalyzeContentSeoDataResponse>(
+                    API_SERVICE.SEO, `content-seo/analyze-content`, { content: originalContent }
+                )
+            setAnalysisData(response.data.data);
+            console.log(response.data.data)
+        } catch (error) {
+            console.log(error)
+        } finally {
+            setOnAnalyzing(false)
+        }
+    }
+
     const onRewriteSEOSubmit = async() => {
-        if (!onSelectArticle) return;
+        if (!originalContent) return;
         try {
             setOnRewriting(true)
-            const response = await postDataAPI<RewriteContentSeoDataResponse>(API_SERVICE.SEO, `content-seo/generate/${onSelectArticle._id}`, {})
+            const response = 
+                await postDataAPI<RewriteContentSeoDataResponse>(
+                    API_SERVICE.SEO, `content-seo/generate`, { content: originalContent }
+                )
             setSeoContent(response.data.data);
+            
         } catch (error) {
             console.log(error)
         } finally {
@@ -65,11 +92,22 @@ export default function SEORewriter() {
                                 placeholder='Nhập nội dung'
                                 style={{ height: 350, resize: 'none' }}
                                 onChange={onChangeOriginalContent}
-                                disabled={onRewriting}
+                                disabled={onRewriting || onAnalyzing}
                             />
                         </div>
                         <div className='nav-features' style={{ margin: '16px 0' }}>
-                            <Button style={{ marginRight: '16px' }} onClick={() => setOnBrowseContent(true)}>Chọn bài viết...</Button>
+                            <Button  onClick={() => setOnBrowseContent(true)}>Chọn bài viết...</Button>
+                            <Button 
+                                style={{ 
+                                    margin: '0 16px',
+                                    backgroundColor: '#000', 
+                                    color: '#fff', 
+                                    opacity: originalContent ? 1 : 0.5 
+                                }} 
+                                disabled={!originalContent}
+                                onClick={onAnalyzeSubmit}
+                                loading={onAnalyzing}
+                                >Phân tích</Button>
                             <Button 
                                 style={{ 
                                     backgroundColor: '#385793', 
@@ -97,17 +135,41 @@ export default function SEORewriter() {
                                 disabled={onRewriting}
                             />
                         </div>
+                        <div className='nav-features' style={{ margin: '16px 0' }}>
+                            <Button onClick={() => setOnPreview(true)}>Preview</Button>
+                        </div>
                     </div>
                 </Col>
             </Row>
+            {
+                analysisData && 
+                <Row>
+                    <Col>
+                        <div className='analysis-content'>
+                            <ReactMarkdown>{analysisData}</ReactMarkdown>
+                        </div>
+                    </Col>
+                </Row>
+            }
             <Modal 
                 title="Chọn bài viết" 
                 open={onBrowseContent} 
                 onOk={handleOk} 
                 onCancel={handleCancel} 
                 width={590}
-                style={{ top: '10px' }}>
+                centered>
                 <ArticleList onSelect={onSelectArticle} setSelect={setOnSelectArticle}/>
+            </Modal>
+            <Modal 
+                title="Xem trước bài viết" 
+                open={onPreview} 
+                onCancel={() => setOnPreview(false)}
+                footer={null}
+                width={890}
+                centered>
+                <div style={{ height: '432px', overflow: 'auto'}}>
+                    <ReactMarkdown>{seoContent}</ReactMarkdown>
+                </div>
             </Modal>
         </div>
     )

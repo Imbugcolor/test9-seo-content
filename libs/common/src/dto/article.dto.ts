@@ -1,9 +1,16 @@
-import { IsOptional } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
+import { PartialType } from '@nestjs/mapped-types';
 
 export class CreateArticleDto {
+  @IsString()
   title: string;
+  @IsString()
   content: string;
+  @IsString()
   url: string;
+  @IsOptional()
+  @IsString()
+  seoContent?: string;
 }
 
 export class GetArticleQueryDto {
@@ -19,3 +26,5 @@ export class GetArticleQueryDto {
   @IsOptional()
   search: string;
 }
+
+export class UpdateArticleDto extends PartialType(CreateArticleDto) {}

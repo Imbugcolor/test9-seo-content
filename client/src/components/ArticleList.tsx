@@ -30,7 +30,7 @@ export default function ArticleList(
         const fetch = async () => {
             try {
                 setLoading(true)
-                const response = await getDataAPI<ArticleDataResponse>(API_SERVICE.ARTICLE, `list?limit=${10}&page=${page}`)
+                const response = await getDataAPI<ArticleDataResponse>(API_SERVICE.ARTICLE, `article/list?limit=${10}&page=${page}`)
                 setArticles({ total: response.data.data.total, data: response.data.data.data, page: parseInt(response.data.data.page) })
             } catch (error) {
                 console.log(error)

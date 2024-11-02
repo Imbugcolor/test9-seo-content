@@ -14,14 +14,18 @@ function App() {
             backgroundColor: 'white'
           }}
         >
-          <div className="demo-logo">SEO CONTENT</div>
+          <div className="demo-logo">
+            <span className="seo">SEO</span> Content
+          </div>
         </Header>
         <Layout>
           <Content style={{ minHeight: '79vh', padding: '0 50px' }}>
             <SEORewriter />
           </Content>
         </Layout>
-        <Footer>footer</Footer>
+        <Footer style={{ textAlign: 'center' }}>
+          SEO Content ©{new Date().getFullYear()} Created by Imbugcolor
+        </Footer>
       </Layout>
     </div>
   );

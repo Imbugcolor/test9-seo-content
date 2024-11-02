@@ -1,17 +1,28 @@
-import { Controller, Get, Param, Post } from '@nestjs/common';
+import { Controller, Get, Post, Query, Body } from '@nestjs/common';
 import { ContentSeoService } from './content-seo.service';
 
 @Controller('content-seo')
 export class ContentSeoController {
   constructor(private contentSeoService: ContentSeoService) {}
 
-  @Get('/analyze-keywords/:id')
-  analyzeKeywords(@Param('id') id: string) {
-    return this.contentSeoService.analyzeKeywordsV2(id);
+  @Get('/analyze-keywords')
+  analyzeKeywords(@Body('content') content: string) {
+    return this.contentSeoService.analyzeKeywords(content);
   }
 
-  @Post('/generate/:id')
-  generateSeoContent(@Param('id') id: string) {
-    return this.contentSeoService.generateSEOContentV2(id);
+  @Post('/analyze-content')
+  analyzeContent(
+    @Body('content') content: string,
+    @Query('lang') lang: string,
+  ) {
+    return this.contentSeoService.analyzeSEOContent(content, lang);
+  }
+
+  @Post('/generate')
+  generateSeoContent(
+    @Body('content') content: string,
+    @Query('lang') lang: string,
+  ) {
+    return this.contentSeoService.generateSEOContent(content, lang);
   }
 }

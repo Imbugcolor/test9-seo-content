@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { ArticleRepository } from './article.repository';
-import { Article, CreateArticleDto, GetArticleQueryDto } from '@app/common';
+import {
+  Article,
+  CreateArticleDto,
+  GetArticleQueryDto,
+  UpdateArticleDto,
+} from '@app/common';
 import { Model, Types } from 'mongoose';
 import { Paginator } from '@app/common/paginator';
 import { InjectModel } from '@nestjs/mongoose';
@@ -20,10 +25,11 @@ export class ArticleService {
       _id: new Types.ObjectId(),
       title: createDto.title,
       originalContent: createDto.content,
+      seoContent: createDto.seoContent,
       url: createDto.url,
     };
     const data = await this.articleRepository.create(article);
-    return { data };
+    return data;
   }
 
   public getList(query: GetArticleQueryDto) {
@@ -34,5 +40,9 @@ export class ArticleService {
       page,
       sort,
     });
+  }
+
+  public update(id: string, updateDto: UpdateArticleDto) {
+    return this.articleRepository.findByIdAndUpdate(id, updateDto);
   }
 }

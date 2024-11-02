@@ -12,5 +12,7 @@ code {
     monospace;
 }
 
+/* Header */
+@import url('./styles/header.css');
 /* Paginator */
 @import url('./styles/paginator.css');
