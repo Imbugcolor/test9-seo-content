@@ -1,18 +1,13 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import OpenAI from 'openai';
 import { GenerativeModel, GoogleGenerativeAI } from '@google/generative-ai';
 
 @Injectable()
 export class ContentSeoService {
-  private openai: OpenAI;
   private gemini: GoogleGenerativeAI;
   private geminiModel: GenerativeModel;
 
   constructor(private configService: ConfigService) {
-    this.openai = new OpenAI({
-      apiKey: this.configService.get<string>('OPENAI_API_KEY'),
-    });
     this.gemini = new GoogleGenerativeAI(
       this.configService.get<string>('GEMINI_API_KEY'),
     );
