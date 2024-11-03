@@ -35,3 +35,14 @@ services:
       - '3003:3003'
     volumes:
       - .:/usr/src/app
+  client:
+    build: 
+      context: ./client
+      dockerfile: ./Dockerfile
+      target: development
+    working_dir: /usr/src/app/client   # Set working directory
+    command: npm run start             # Run command directly
+    ports:
+      - '8080:3000'
+    volumes:
+      - .:/usr/src/app
