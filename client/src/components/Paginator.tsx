@@ -7,13 +7,22 @@ export interface ListData {
 }
 
 export default function Paginator<T extends ListData>(
-    { list, limit, callback }: 
-    { list: T, limit?: number, callback: (num: number) => void }
+    { list, limit, callback }:
+        { list: T, limit?: number, callback: (num: number) => void }
 ) {
     const { page, total } = list
 
-    const totalPages = Math.ceil(total/( limit ? limit : 10))
-    const newArr = [...Array(totalPages)].map((_, i) => i + 1)
+    const totalPages = Math.ceil(total / (limit ? limit : 10))
+
+    // Calculate the start and end of the page range
+    const startPage = Math.max(1, page - 3);
+    const endPage = Math.min(totalPages, page + 3);
+
+    // Generate the array of page numbers to display
+    const pages = [];
+    for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+    }
 
     const isActive = (index: number) => {
         if (index === page) return 'active';
@@ -39,7 +48,7 @@ export default function Paginator<T extends ListData>(
                 }
 
                 {
-                    newArr.map(num => (
+                    pages.map(num => (
                         <li key={num} className={`page-item ${isActive(num)}`}
                             onClick={() => handlePagination(num)}>
                             <span className="page-redirect-link">

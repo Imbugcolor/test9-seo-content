@@ -1,13 +1,17 @@
-import { Button, Col, Input, Modal, Row } from 'antd'
-import React, { ChangeEvent, useState } from 'react'
+import { Button, Col, Input, Modal, notification, Row } from 'antd'
+import { ChangeEvent, useState } from 'react'
 import ArticleList from './ArticleList'
 import { Article } from '../utils/interfaces/article.interface'
-import { postDataAPI } from '../utils/fetch/http.request'
+import { patchDataAPI, postDataAPI } from '../utils/fetch/http.request'
 import { API_SERVICE } from '../utils/config'
 import { AnalyzeContentSeoDataResponse, RewriteContentSeoDataResponse } from '../utils/responses/content-seo.response'
 import ReactMarkdown from "react-markdown";
+import { EyeOutlined, PlusOutlined, SaveOutlined } from '@ant-design/icons'
+import NewSavedForm, { SavedFormInput } from './NewSavedForm'
+import { SavedArticleResponse } from '../utils/responses/article.response'
 
 export default function SEORewriter() {
+    const [notify, contextHolder] = notification.useNotification();
     const [originalContent, setOriginalContent] = useState('')
     const [seoContent, setSeoContent] = useState('')
     const [analysisData, setAnalysisData] = useState('')
@@ -16,7 +20,8 @@ export default function SEORewriter() {
     const [onSelectArticle, setOnSelectArticle] = useState<Article | null>(null)
     const [onRewriting, setOnRewriting] = useState(false)
     const [onAnalyzing, setOnAnalyzing] = useState(false)
-    const [isNewArticle, setIsNewArticle] = useState(true)
+    const [onNewSaved, setOnNewSaved] = useState(false)
+    const [refreshList, setRefreshList] = useState(false)
 
     const onChangeOriginalContent = (e: ChangeEvent<HTMLTextAreaElement>) => {
         setOriginalContent(e.target.value);
@@ -29,7 +34,6 @@ export default function SEORewriter() {
     const handleOk = () => {
         if (!onSelectArticle) return;
         setOriginalContent(onSelectArticle.originalContent);
-        setIsNewArticle(false);
         if (onSelectArticle.seoContent) {
             setSeoContent(onSelectArticle.seoContent)
         } else {
@@ -43,16 +47,16 @@ export default function SEORewriter() {
         setOnBrowseContent(false);
     }
 
-    const onAnalyzeSubmit = async() => {
+    const onAnalyzeSubmit = async () => {
         if (!originalContent) return;
         try {
             setOnAnalyzing(true)
-            const response = 
+            const response =
                 await postDataAPI<AnalyzeContentSeoDataResponse>(
                     API_SERVICE.SEO, `content-seo/analyze-content`, { content: originalContent }
                 )
-            setAnalysisData(response.data.data);
-            console.log(response.data.data)
+            setAnalysisData(response.data);
+            console.log(response.data)
         } catch (error) {
             console.log(error)
         } finally {
@@ -60,16 +64,16 @@ export default function SEORewriter() {
         }
     }
 
-    const onRewriteSEOSubmit = async() => {
+    const onRewriteSEOSubmit = async () => {
         if (!originalContent) return;
         try {
             setOnRewriting(true)
-            const response = 
+            const response =
                 await postDataAPI<RewriteContentSeoDataResponse>(
                     API_SERVICE.SEO, `content-seo/generate`, { content: originalContent }
                 )
-            setSeoContent(response.data.data);
-            
+            setSeoContent(response.data);
+
         } catch (error) {
             console.log(error)
         } finally {
@@ -77,8 +81,40 @@ export default function SEORewriter() {
         }
     }
 
+    const handleSaveSEOArticle = async () => {
+        if(!seoContent) return;
+        if (onSelectArticle) {
+            await patchDataAPI<SavedArticleResponse>(API_SERVICE.ARTICLE, `article/update/${onSelectArticle._id}`, { seoContent })
+            notify.success({ message: 'Saved success.'})
+            setRefreshList(!refreshList);
+        } else {
+            setOnNewSaved(true);
+            // const saved = await patchDataAPI(API_SERVICE.ARTICLE, 'article/create',)
+        }
+    }
+
+    const onSubmitSavedForm = async(values: SavedFormInput) => {
+        const { title, url } = values;
+        const newArticle = {
+            content: originalContent,
+            seoContent,
+            title,
+            url,
+        }
+        await postDataAPI<SavedArticleResponse>(API_SERVICE.ARTICLE, 'article/create', newArticle)
+        setRefreshList(!refreshList);
+    }
+
+    const handleNewArticle = () => {
+        setOnSelectArticle(null)
+        setOriginalContent('')
+        setSeoContent('')
+        setAnalysisData('')
+    }
+
     return (
         <div className='seo-rewriter-container'>
+             {contextHolder}
             <Row gutter={[16, 16]}>
                 <Col md={12} sm={24} xs={24}>
                     <div className='original-content'>
@@ -96,28 +132,36 @@ export default function SEORewriter() {
                             />
                         </div>
                         <div className='nav-features' style={{ margin: '16px 0' }}>
-                            <Button  onClick={() => setOnBrowseContent(true)}>Chọn bài viết...</Button>
-                            <Button 
-                                style={{ 
+                            {
+                                onSelectArticle &&
+                                <Button 
+                                    onClick={handleNewArticle} 
+                                    disabled={!onSelectArticle}
+                                    style={{ marginRight: '16px' }}
+                                ><PlusOutlined />Tạo mới</Button>
+                            }
+                            <Button onClick={() => setOnBrowseContent(true)}>Chọn bài viết...</Button>
+                            <Button
+                                style={{
                                     margin: '0 16px',
-                                    backgroundColor: '#000', 
-                                    color: '#fff', 
-                                    opacity: originalContent ? 1 : 0.5 
-                                }} 
+                                    backgroundColor: '#000',
+                                    color: '#fff',
+                                    opacity: originalContent ? 1 : 0.5
+                                }}
                                 disabled={!originalContent}
                                 onClick={onAnalyzeSubmit}
                                 loading={onAnalyzing}
-                                >Phân tích</Button>
-                            <Button 
-                                style={{ 
-                                    backgroundColor: '#385793', 
-                                    color: '#fff', 
-                                    opacity: originalContent ? 1 : 0.5 
-                                }} 
+                            >Phân tích</Button>
+                            <Button
+                                style={{
+                                    backgroundColor: '#385793',
+                                    color: '#fff',
+                                    opacity: originalContent ? 1 : 0.5
+                                }}
                                 disabled={!originalContent}
                                 onClick={onRewriteSEOSubmit}
                                 loading={onRewriting}
-                                >Viết lại SEO</Button>
+                            >Viết lại SEO</Button>
                         </div>
                     </div>
                 </Col>
@@ -136,13 +180,19 @@ export default function SEORewriter() {
                             />
                         </div>
                         <div className='nav-features' style={{ margin: '16px 0' }}>
-                            <Button onClick={() => setOnPreview(true)}>Preview</Button>
+                            <Button onClick={() => setOnPreview(true)}><EyeOutlined />Preview</Button>
+                            <Button 
+                                onClick={handleSaveSEOArticle} 
+                                style={{ margin: '0 16px' }}
+                            >
+                                <SaveOutlined />Lưu
+                            </Button>
                         </div>
                     </div>
                 </Col>
             </Row>
             {
-                analysisData && 
+                analysisData &&
                 <Row>
                     <Col>
                         <div className='analysis-content'>
@@ -151,25 +201,41 @@ export default function SEORewriter() {
                     </Col>
                 </Row>
             }
-            <Modal 
-                title="Chọn bài viết" 
-                open={onBrowseContent} 
-                onOk={handleOk} 
-                onCancel={handleCancel} 
+            <Modal
+                title="Chọn bài viết"
+                open={onBrowseContent}
+                onOk={handleOk}
+                onCancel={handleCancel}
                 width={590}
-                centered>
-                <ArticleList onSelect={onSelectArticle} setSelect={setOnSelectArticle}/>
+                style={{ top: '10px' }}
+                >
+                <ArticleList 
+                    onSelect={onSelectArticle} 
+                    setSelect={setOnSelectArticle} 
+                    refreshList={refreshList}
+                />
             </Modal>
-            <Modal 
-                title="Xem trước bài viết" 
-                open={onPreview} 
+            <Modal
+                title="Xem trước bài viết"
+                open={onPreview}
                 onCancel={() => setOnPreview(false)}
                 footer={null}
                 width={890}
-                centered>
-                <div style={{ height: '432px', overflow: 'auto'}}>
+                style={{ top: '10px' }}
+                >
+                <div style={{ height: '432px', overflow: 'auto' }}>
                     <ReactMarkdown>{seoContent}</ReactMarkdown>
                 </div>
+            </Modal>
+            <Modal
+                title="Lưu bài viết"
+                open={onNewSaved}
+                onCancel={() => setOnNewSaved(false)}
+                footer={null}
+                width={690}
+                style={{ top: '10px' }}
+                >
+                    <NewSavedForm onSubmitSavedForm={onSubmitSavedForm}/>
             </Modal>
         </div>
     )

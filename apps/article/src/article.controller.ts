@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Patch, Param, Query } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { EventPattern, Payload } from '@nestjs/microservices';
 import {
@@ -16,12 +16,12 @@ export class ArticleController {
     return this.articleService.getList(query);
   }
 
-  @Get('/create')
+  @Post('/create')
   async createArticle(@Body() createDto: CreateArticleDto) {
     return this.articleService.create(createDto);
   }
 
-  @Get('/update/:id')
+  @Patch('/update/:id')
   async updateArticle(
     @Param('id') id: string,
     @Body() updateDto: UpdateArticleDto,
