@@ -17,10 +17,11 @@ async function bootstrap() {
   });
   const configService = app.get(ConfigService);
   app.connectMicroservice({
-    transport: Transport.TCP,
+    transport: Transport.REDIS,
     options: {
-      host: '0.0.0.0',
-      port: configService.get('SEOCONTENT_TCP_PORT'),
+      host: configService.get('REDIS_HOST'),
+      port: configService.get('REDIS_PORT'),
+      password: configService.get('REDIS_PASSWORD'),
     },
   });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));

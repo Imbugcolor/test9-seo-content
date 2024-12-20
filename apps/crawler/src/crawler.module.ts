@@ -21,10 +21,11 @@ import * as Joi from 'joi';
       {
         name: ARTICLE_SERVICE,
         useFactory: async (configService: ConfigService) => ({
-          transport: Transport.TCP,
+          transport: Transport.REDIS,
           options: {
-            host: configService.get('ARTICLE_HOST'),
-            port: configService.get('ARTICLE_PORT'),
+            host: configService.get('REDIS_HOST'),
+            port: configService.get('REDIS_PORT'),
+            password: configService.get('REDIS_PASSWORD'),
           },
         }),
         inject: [ConfigService],
