@@ -3,7 +3,7 @@
 ## Những công nghệ, kiến trúc sử dụng trong project
 
 **Server:**
-1. Sử dụng framework Nestjs xây dựng server với mô hình microservice, thiết lập kết nối TCP giữa các service (monorepo): 
+1. Sử dụng framework Nestjs xây dựng server với mô hình microservice, sử dụng Redis thiết lập kết nối giữa các service (monorepo): 
  + Article service (CRUD bài viết )
  + Content-seo service (Tích hợp Gemini API xử lý nội dung bài viết)
  + Crawler service (Cào dữ liệu các bài viết trên trang VnExpress và gửi đến article service để lưu vào csdl)
